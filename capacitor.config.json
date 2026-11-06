@@ -11,6 +11,20 @@
     "allowMixedContent": false
   },
   "plugins": {
-    "PushNotifications": { "presentationOptions": ["badge", "sound", "alert"] }
+    "PushNotifications": {
+      "presentationOptions": [
+        "badge",
+        "sound",
+        "alert"
+      ]
+    },
+    "SocialLogin": {
+      "providers": {
+        "google": true,
+        "facebook": false,
+        "apple": false,
+        "twitter": false
+      }
+    }
   }
 }

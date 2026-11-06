@@ -27,3 +27,14 @@ allprojects {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
+
+// @capgo/capacitor-social-login compiles against androidx.browser 1.9.0 (its
+// Apple provider, compileOnly since only Google is enabled) while Google's
+// androidbrowserhelper 2.5.0 brings 1.4.0; Gradle's consistent resolution then
+// refuses both. One version everywhere: 1.8.0, the newest that still builds
+// against compileSdk 35 (1.9.0 needs 36).
+allprojects {
+    configurations.all {
+        resolutionStrategy { force 'androidx.browser:browser:1.8.0' }
+    }
+}
