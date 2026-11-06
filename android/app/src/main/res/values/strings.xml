@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AmineAuto</string>
+    <string name="title_activity_main">AmineAuto</string>
+    <string name="package_name">com.amineauto.app</string>
+    <string name="custom_url_scheme">com.amineauto.app</string>
+    <string name="shortcut_name_0">المتجر</string>
+    <string name="shortcut_short_name_0">المتجر</string>
+    <string name="shortcut_name_1">اطلب قطعة</string>
+    <string name="shortcut_short_name_1">طلب</string>
+    <string name="notification_channel_default">إشعارات AmineAuto</string>
+</resources>

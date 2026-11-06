@@ -1,0 +1,8 @@
+node_modules/
+android/keystore.properties
+android/app/google-services.json
+android/app/build/
+android/build/
+android/.gradle/
+*.apk
+*.aab

@@ -1,0 +1,14 @@
+{
+  "name": "amineauto-app",
+  "private": true,
+  "version": "1.1.0",
+  "description": "Native shell (Capacitor) around https://amineauto.com — replaces the Bubblewrap TWA in /opt/amineauto-android",
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/app": "^7.0.0",
+    "@capacitor/cli": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/geolocation": "^7.0.0",
+    "@capacitor/push-notifications": "^7.0.0"
+  }
+}

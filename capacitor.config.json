@@ -1,0 +1,16 @@
+{
+  "appId": "com.amineauto.app",
+  "appName": "AmineAuto",
+  "webDir": "www",
+  "server": {
+    "url": "https://amineauto.com",
+    "androidScheme": "https",
+    "cleartext": false
+  },
+  "android": {
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "PushNotifications": { "presentationOptions": ["badge", "sound", "alert"] }
+  }
+}
