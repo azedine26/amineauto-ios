@@ -2,4 +2,8 @@
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
     <external-path name="my_images" path="." />
     <cache-path name="my_cache_images" path="." />
+    <!-- Where NativeFiles.saveAndOpen writes. getExternalFilesDir is app-private,
+         so writing there needs no storage permission on any supported version,
+         and this entry is what lets the viewer we hand the file to read it. -->
+    <external-files-path name="downloads" path="downloads/" />
 </paths>

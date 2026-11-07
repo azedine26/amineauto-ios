@@ -58,4 +58,13 @@
     <!-- The site asks for location (wilaya / nearest sellers); the TWA had locationDelegation. -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- The barcode scanner reads the camera through getUserMedia (@zxing/browser in
+         components/product/ProductForm.tsx, and the POS at /admin/pos), and two inputs
+         use capture="environment" for a product photo and a supplier receipt. Without
+         this the WebView refuses the camera outright, so every one of those silently
+         did nothing inside the app. `required=false` so the app still installs on a
+         device with no camera — the rest of it does not need one. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />
 </manifest>
