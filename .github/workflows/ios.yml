@@ -35,7 +35,8 @@ jobs:
           npx cap sync ios
 
       - name: Drop in Firebase config (GoogleService-Info.plist)
-        env: { PLIST_B64: ${{ secrets.IOS_GOOGLE_SERVICE_PLIST_B64 }} }
+        env:
+          PLIST_B64: ${{ secrets.IOS_GOOGLE_SERVICE_PLIST_B64 }}
         run: echo "$PLIST_B64" | base64 --decode > "$APP_DIR/App/GoogleService-Info.plist"
 
       - name: Apply entitlements (push + associated domains)
@@ -53,7 +54,8 @@ jobs:
           p12-password: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
 
       - name: Install provisioning profile
-        env: { PROFILE_B64: ${{ secrets.IOS_PROVISION_PROFILE_B64 }} }
+        env:
+          PROFILE_B64: ${{ secrets.IOS_PROVISION_PROFILE_B64 }}
         run: |
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "$PROFILE_B64" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/app.mobileprovision
