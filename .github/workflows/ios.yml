@@ -25,7 +25,7 @@ jobs:
         with: { node-version: '20', cache: 'npm' }
 
       - name: Install JS deps (+ @capacitor/ios)
-        run: npm ci
+        run: npm install
 
       # The native iOS project is generated fresh each run (ios/ is gitignored),
       # then our committed entitlements + the Firebase plist are dropped in.
