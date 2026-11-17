@@ -18,6 +18,7 @@ jobs:
       APP_DIR: ios/App
       SCHEME: App
       BUNDLE_ID: com.amineauto.app
+      COCOAPODS_DISABLE_STATS: '1'   # skip the analytics round-trip pod does on every run
     steps:
       - uses: actions/checkout@v4
 
@@ -42,9 +43,11 @@ jobs:
       - name: Apply entitlements (push + associated domains)
         run: cp ios-config/App.entitlements "$APP_DIR/App/App.entitlements"
 
-      - name: Install pods
+      # Pods are already installed by `cap add ios` / `cap sync ios` above; we
+      # only re-run if the workspace somehow wasn't produced (defensive, cheap).
+      - name: Ensure pods installed
         working-directory: ${{ env.APP_DIR }}
-        run: pod install
+        run: test -d App.xcworkspace || pod install
 
       # --- Code signing: import the distribution cert + provisioning profile ---
       - name: Import signing certificate
