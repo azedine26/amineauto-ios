@@ -1,0 +1,98 @@
+# Build the AmineAuto iOS app on a GitHub-hosted macOS runner and upload it to
+# TestFlight. No Mac needed locally. See IOS_RELEASE_RUNBOOK.md for the one-time
+# Apple/Firebase setup and the list of secrets this workflow expects.
+#
+# Trigger: manually (workflow_dispatch) or on a tag like ios-v1.1.0.
+name: iOS TestFlight
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['ios-v*']
+
+jobs:
+  build:
+    runs-on: macos-14            # Xcode 15/16, CocoaPods preinstalled
+    timeout-minutes: 40
+    env:
+      APP_DIR: ios/App
+      SCHEME: App
+      BUNDLE_ID: com.amineauto.app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: 'npm' }
+
+      - name: Install JS deps (+ @capacitor/ios)
+        run: npm ci
+
+      # The native iOS project is generated fresh each run (ios/ is gitignored),
+      # then our committed entitlements + the Firebase plist are dropped in.
+      - name: Add iOS platform
+        run: |
+          npx cap add ios || npx cap sync ios
+          npx cap sync ios
+
+      - name: Drop in Firebase config (GoogleService-Info.plist)
+        env: { PLIST_B64: ${{ secrets.IOS_GOOGLE_SERVICE_PLIST_B64 }} }
+        run: echo "$PLIST_B64" | base64 --decode > "$APP_DIR/App/GoogleService-Info.plist"
+
+      - name: Apply entitlements (push + associated domains)
+        run: cp ios-config/App.entitlements "$APP_DIR/App/App.entitlements"
+
+      - name: Install pods
+        working-directory: ${{ env.APP_DIR }}
+        run: pod install
+
+      # --- Code signing: import the distribution cert + provisioning profile ---
+      - name: Import signing certificate
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.IOS_DIST_CERT_P12_B64 }}
+          p12-password: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
+
+      - name: Install provisioning profile
+        env: { PROFILE_B64: ${{ secrets.IOS_PROVISION_PROFILE_B64 }} }
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "$PROFILE_B64" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/app.mobileprovision
+
+      - name: Archive
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          xcodebuild -workspace App.xcworkspace -scheme "$SCHEME" \
+            -configuration Release -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -destination 'generic/platform=iOS' \
+            DEVELOPMENT_TEAM="${{ secrets.IOS_TEAM_ID }}" \
+            CODE_SIGN_STYLE=Manual \
+            PROVISIONING_PROFILE_SPECIFIER="${{ secrets.IOS_PROFILE_NAME }}" \
+            clean archive
+
+      - name: Export IPA
+        working-directory: ${{ env.APP_DIR }}
+        run: |
+          cat > "$RUNNER_TEMP/export.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store</string>
+            <key>teamID</key><string>${{ secrets.IOS_TEAM_ID }}</string>
+            <key>uploadSymbols</key><true/>
+          </dict></plist>
+          EOF
+          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/export.plist" \
+            -exportPath "$RUNNER_TEMP/export"
+
+      # Upload to TestFlight using an App Store Connect API key (issuer+key+.p8).
+      - name: Upload to TestFlight
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_B64: ${{ secrets.ASC_API_KEY_P8_B64 }}
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "$ASC_KEY_B64" | base64 --decode > ~/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8
+          xcrun altool --upload-app -f "$RUNNER_TEMP/export/App.ipa" -t ios \
+            --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID"

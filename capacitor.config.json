@@ -12,6 +12,9 @@
     "adjustMarginsForEdgeToEdge": "force"
   },
   "plugins": {
+    "Keyboard": {
+      "resize": "native"
+    },
     "PushNotifications": {
       "presentationOptions": [
         "badge",
