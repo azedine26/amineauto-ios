@@ -12,7 +12,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14            # Xcode 15/16, CocoaPods preinstalled
+    runs-on: macos-13            # standard Intel runner (macos-14 routed to an unsupported XL)
     timeout-minutes: 40
     env:
       APP_DIR: ios/App
