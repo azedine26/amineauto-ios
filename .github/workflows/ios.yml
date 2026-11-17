@@ -80,16 +80,17 @@ jobs:
           echo "Using signing identity: $HASH"
           echo "SIGN_ID=$HASH" >> "$GITHUB_ENV"
 
-      - name: Archive
+      # Archive UNSIGNED. Forcing a provisioning profile as a global build
+      # setting makes every CocoaPods framework target fail ("Pod X does not
+      # support provisioning profiles"). Instead we leave signing off here and
+      # sign only the app bundle at export, via the ExportOptions profile map.
+      - name: Archive (unsigned — signed at export)
         working-directory: ${{ env.APP_DIR }}
         run: |
           xcodebuild -workspace App.xcworkspace -scheme "$SCHEME" \
             -configuration Release -archivePath "$RUNNER_TEMP/App.xcarchive" \
             -destination 'generic/platform=iOS' \
-            DEVELOPMENT_TEAM="${{ secrets.IOS_TEAM_ID }}" \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="$SIGN_ID" \
-            PROVISIONING_PROFILE_SPECIFIER="${{ secrets.IOS_PROFILE_NAME }}" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
             clean archive
 
       - name: Export IPA
@@ -101,6 +102,12 @@ jobs:
           <plist version="1.0"><dict>
             <key>method</key><string>app-store</string>
             <key>teamID</key><string>${{ secrets.IOS_TEAM_ID }}</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>signingCertificate</key><string>Apple Distribution</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.amineauto.app</key><string>${{ secrets.IOS_PROFILE_NAME }}</string>
+            </dict>
             <key>uploadSymbols</key><true/>
           </dict></plist>
           EOF
