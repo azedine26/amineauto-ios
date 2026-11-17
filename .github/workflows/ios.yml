@@ -91,6 +91,7 @@ jobs:
             -configuration Release -archivePath "$RUNNER_TEMP/App.xcarchive" \
             -destination 'generic/platform=iOS' \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
+            CURRENT_PROJECT_VERSION="${{ github.run_number }}" \
             clean archive
 
       - name: Export IPA
