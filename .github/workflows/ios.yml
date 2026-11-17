@@ -63,6 +63,23 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "$PROFILE_B64" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/app.mobileprovision
 
+      # The project defaults to a *development* signing identity; an App Store
+      # archive must use the *distribution* cert we imported. Read its exact
+      # SHA-1 out of the keychain so this works whether the cert is named
+      # "Apple Distribution" or the older "iPhone/iOS Distribution".
+      - name: Resolve distribution signing identity
+        run: |
+          echo "Codesigning identities available:"
+          security find-identity -v -p codesigning
+          HASH=$(security find-identity -v -p codesigning \
+                   | grep -iE 'Distribution' | head -1 | awk '{print $2}')
+          if [ -z "$HASH" ]; then
+            echo "::error::No distribution signing identity found in keychain — the imported .p12 is not a distribution cert."
+            exit 1
+          fi
+          echo "Using signing identity: $HASH"
+          echo "SIGN_ID=$HASH" >> "$GITHUB_ENV"
+
       - name: Archive
         working-directory: ${{ env.APP_DIR }}
         run: |
@@ -71,6 +88,7 @@ jobs:
             -destination 'generic/platform=iOS' \
             DEVELOPMENT_TEAM="${{ secrets.IOS_TEAM_ID }}" \
             CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="$SIGN_ID" \
             PROVISIONING_PROFILE_SPECIFIER="${{ secrets.IOS_PROFILE_NAME }}" \
             clean archive
 
