@@ -40,6 +40,18 @@ jobs:
           PLIST_B64: ${{ secrets.IOS_GOOGLE_SERVICE_PLIST_B64 }}
         run: echo "$PLIST_B64" | base64 --decode > "$APP_DIR/App/GoogleService-Info.plist"
 
+      # `cap add ios` ships Capacitor's own icon and splash. Overwrite every
+      # image in those asset sets with ours (opaque RGB — Apple rejects alpha).
+      - name: Apply AmineAuto icon + launch screen
+        run: |
+          ICONSET="$APP_DIR/App/Assets.xcassets/AppIcon.appiconset"
+          SPLASH="$APP_DIR/App/Assets.xcassets/Splash.imageset"
+          ls "$ICONSET" "$SPLASH"
+          n=0; for f in "$ICONSET"/*.png; do cp ios-config/AppIcon-1024.png "$f"; n=$((n+1)); done
+          [ "$n" -gt 0 ] || { echo "::error::no icon file found in $ICONSET"; exit 1; }
+          for f in "$SPLASH"/*.png; do [ -e "$f" ] && cp ios-config/splash-2732.png "$f"; done
+          echo "icon files replaced: $n"
+
       - name: Apply entitlements (push + associated domains)
         run: cp ios-config/App.entitlements "$APP_DIR/App/App.entitlements"
 
